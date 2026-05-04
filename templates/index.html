@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Logistic Regression — Interactive Learning</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+<header class="topbar">
+  <h1>📊 Logistic Regression — Interactive Learning System</h1>
+  <nav>
+    <button class="tab active" data-tab="upload">1. Upload</button>
+    <button class="tab" data-tab="preprocess">2. Preprocess</button>
+    <button class="tab" data-tab="eda">3. EDA</button>
+    <button class="tab" data-tab="learn">4. Learn</button>
+    <button class="tab" data-tab="train">5. Train</button>
+    <button class="tab" data-tab="evaluate">6. Evaluate</button>
+    <button class="tab" data-tab="predict">7. Predict</button>
+    <button class="tab" data-tab="ask">🤖 Ask AI</button>
+  </nav>
+</header>
+
+<main>
+  <!-- 1. Upload -->
+  <section id="upload" class="panel active">
+    <h2>Step 1 — Upload your dataset</h2>
+    <p class="hint">CSV with a binary or multiclass target column.</p>
+    <div class="row">
+      <input type="file" id="fileInput" accept=".csv" />
+      <button id="uploadBtn" class="primary">Upload</button>
+      <button id="sampleBtn">Load sample dataset</button>
+    </div>
+    <div id="datasetInfo"></div>
+  </section>
+
+  <!-- 2. Preprocess -->
+  <section id="preprocess" class="panel">
+    <h2>Step 2 — Preprocessing</h2>
+    <div class="grid-2">
+      <div class="card">
+        <label>Target column
+          <select id="targetSel"></select>
+        </label>
+        <label>Missing values
+          <select id="missingSel">
+            <option value="mean">Mean (numeric)</option>
+            <option value="median">Median (numeric)</option>
+            <option value="mode">Mode</option>
+            <option value="drop">Drop rows</option>
+          </select>
+        </label>
+        <label>Encoding
+          <select id="encSel">
+            <option value="label">Label Encoding</option>
+            <option value="onehot">One-Hot Encoding</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="scaleChk" checked /> Standardize features (StandardScaler)</label>
+        <button id="preprocBtn" class="primary">Apply preprocessing</button>
+      </div>
+      <div class="card explain">
+        <h3>Why preprocess?</h3>
+        <ul>
+          <li><b>Missing values</b> break math — fill or drop them.</li>
+          <li><b>Encoding</b> turns text categories into numbers the model can use.</li>
+          <li><b>Scaling</b> puts features on the same range so weights are comparable and convergence is faster.</li>
+        </ul>
+      </div>
+    </div>
+    <div id="preprocResult"></div>
+  </section>
+
+  <!-- 3. EDA -->
+  <section id="eda" class="panel">
+    <h2>Step 3 — Exploratory Data Analysis</h2>
+    <button id="edaBtn" class="primary">Generate plots</button>
+    <div id="edaPlots" class="plots"></div>
+  </section>
+
+  <!-- 4. Learn -->
+  <section id="learn" class="panel">
+    <h2>Step 4 — How Logistic Regression Works</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>1. Linear combination</h3>
+        <p class="formula">z = w₁x₁ + w₂x₂ + … + wₙxₙ + b</p>
+        <p>Each feature x is weighted by w. The sum + bias is a real number z ∈ (-∞, ∞).</p>
+
+        <h3>2. Sigmoid function</h3>
+        <p class="formula">σ(z) = 1 / (1 + e<sup>-z</sup>)</p>
+        <p>Squashes z into (0, 1) — interpreted as a <b>probability</b>.</p>
+
+        <h3>3. Decision rule</h3>
+        <p class="formula">ŷ = 1 if σ(z) ≥ 0.5 else 0</p>
+
+        <h3>4. Multiclass — One-vs-Rest</h3>
+        <p>Train one binary classifier per class, pick the class with highest probability.</p>
+      </div>
+      <div class="card">
+        <h3>Step-by-step on a real sample</h3>
+        <p class="hint">Train the model first (Step 5), then come back here.</p>
+        <div class="row">
+          <label>Test sample index <input type="number" id="sampleIdx" value="0" min="0" /></label>
+          <button id="explainBtn">Explain sample</button>
+        </div>
+        <div id="explainOut"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Train -->
+  <section id="train" class="panel">
+    <h2>Step 5 — Train the model</h2>
+    <div class="card">
+      <label>Test size: <span id="tsLabel">0.20</span>
+        <input type="range" id="testSize" min="0.1" max="0.5" step="0.05" value="0.2" />
+      </label>
+      <label>k-fold CV: <input type="number" id="kFolds" value="5" min="2" max="10" /></label>
+      <label>Max iterations: <input type="number" id="maxIter" value="1000" min="100" /></label>
+      <button id="trainBtn" class="primary">Train model</button>
+    </div>
+    <div id="trainOut"></div>
+    <div id="vizOut" class="plots"></div>
+  </section>
+
+  <!-- 6. Evaluate -->
+  <section id="evaluate" class="panel">
+    <h2>Step 6 — Evaluation metrics</h2>
+    <button id="evalBtn" class="primary">Evaluate</button>
+    <div id="evalOut"></div>
+  </section>
+
+  <!-- 7. Predict -->
+  <section id="predict" class="panel">
+    <h2>Step 7 — Predict on new data</h2>
+    <p class="hint">Enter raw (un-scaled) feature values. The app applies the same scaler used during training.</p>
+    <div id="predictForm"></div>
+    <button id="predictBtn" class="primary">Predict</button>
+    <div id="predictOut"></div>
+  </section>
+
+  <!-- Ask AI -->
+  <section id="ask" class="panel">
+    <h2>🤖 Ask AI</h2>
+    <p class="hint">Ask anything about logistic regression, your dataset, or your model.</p>
+    <textarea id="askInput" rows="3" placeholder="e.g. Why do we use the sigmoid function?"></textarea>
+    <button id="askBtn" class="primary">Ask</button>
+    <div id="askOut" class="card"></div>
+  </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
